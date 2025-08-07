@@ -1,28 +1,30 @@
 import streamlit as st
 import qrcode
 from PIL import Image
-from io import BytesIO
+import io
 
-# Streamlit page config
-st.set_page_config(page_title="CR One App ? QR Code Generator", layout="centered")
+st.set_page_config(page_title="CR One App", layout="centered")
 
-# App title and description
-st.title("?? CR One App ? Custom QR Code Generator")
-st.markdown("Create branded QR codes with your link, logo, and style ? ready in seconds.")
+st.title("✨ CR One App ✨ Custom QR Code Generator")
+st.markdown("Create branded QR codes with your link, logo, and style – ready in seconds.")
 
-# Input fields
-url = st.text_input("?? Enter the destination URL")
+# Get destination URL
+url = st.text_input("🔗 Enter the destination URL")
 
-logo_file = st.file_uploader("??? Drag and drop your logo image (PNG, JPG)", type=["png", "jpg", "jpeg"])
+# Upload logo image
+logo_image = st.file_uploader("📌 Drag and drop your logo image (PNG, JPG)", type=["png", "jpg", "jpeg"])
 
-fill_color = st.color_picker("?? Choose QR code color", "#000000")
-back_color = st.color_picker("?? Choose background color", "#ffffff")
+# QR code color
+qr_color = st.color_picker("🎨 Choose QR code color", "#000000")
 
-email = st.text_input("?? Optional: Enter email to receive future updates")
+# Background color
+bg_color = st.color_picker("🌈 Choose background color", "#FFFFFF")
 
-# Generate QR code
-if url and logo_file:
-    # QR setup
+# Optional email
+email = st.text_input("✉️ Optional: Enter email to receive future updates (not required)")
+
+# Generate QR button
+if st.button("🚀 Generate QR Code") and url:
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -32,37 +34,37 @@ if url and logo_file:
     qr.add_data(url)
     qr.make(fit=True)
 
-    # Generate base QR image
-    qr_img = qr.make_image(fill_color=fill_color, back_color=back_color).convert("RGB")
+    # Create QR image
+    qr_image = qr.make_image(fill_color=qr_color, back_color=bg_color).convert("RGB")
 
-    # Load and resize logo
-    logo = Image.open(logo_file)
-    box_size = 60
-    logo = logo.resize((box_size, box_size))
+    # Resize the QR image to 600x600
+    qr_image = qr_image.resize((600, 600))
 
-    # Center the logo
-    qr_width, qr_height = qr_img.size
-    pos = ((qr_width - box_size) // 2, (qr_height - box_size) // 2)
-    qr_img.paste(logo, pos, mask=logo if logo.mode == "RGBA" else None)
+    # If logo is uploaded
+    if logo_image is not None:
+        logo = Image.open(logo_image)
 
-    # Display the QR image
-    st.image(qr_img, caption="?? Your Branded QR Code", use_column_width=True)
+        # Resize logo
+        logo_size = 100
+        logo = logo.resize((logo_size, logo_size))
 
-    # Prepare for download
-    buffer = BytesIO()
-    qr_img.save(buffer, format="PNG")
+        # Get position to paste logo
+        qr_width, qr_height = qr_image.size
+        pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
 
-    # Download button
+        qr_image.paste(logo, pos, mask=logo if logo.mode == 'RGBA' else None)
+
+    # Display the image
+    st.image(qr_image, use_container_width=True, caption="🔍 Your Branded QR Code")
+
+    # Allow download
+    buf = io.BytesIO()
+    qr_image.save(buf, format="PNG")
+    byte_im = buf.getvalue()
+
     st.download_button(
-        label="?? Download QR Code",
-        data=buffer.getvalue(),
-        file_name="qr_code.png",
+        label="📥 Download QR Code",
+        data=byte_im,
+        file_name="cr-one-qr.png",
         mime="image/png"
     )
-
-    st.caption("? Powered by CR One App ? Customize. Create. Connect.")
-
-elif url and not logo_file:
-    st.warning("?? Please upload a logo image.")
-elif logo_file and not url:
-    st.warning("?? Please enter a destination URL.")

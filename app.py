@@ -14,7 +14,6 @@ logo_file = st.file_uploader("🖼️ Drag & Drop Your Logo (PNG preferred)", ty
 qr_color = st.color_picker("🎨 QR Code Dot Color", value="#000000")
 bg_color = st.color_picker("🌈 Background Color", value="#FFFFFF")
 shape_option = st.selectbox("🔲 QR Dot Shape", ["square", "rounded"])
-eye_shape = st.selectbox("👁️ Eye Shape", ["square", "circle"])
 gradient = st.checkbox("🌈 Enable Gradient Fill (Dot Color to Background Color)")
 add_text = st.text_input("✏️ Optional Text Below QR (Brand/CTA)")
 size = st.slider("📐 Output Size (pixels)", min_value=600, max_value=1200, value=800, step=100)
@@ -41,14 +40,6 @@ if st.button("🚀 Generate QR Code") and url:
             for x in range(qr_img.size[0]):
                 if pixels[x, y] == Image.new("RGB", (1, 1), qr_color).getpixel((0, 0)):
                     pixels[x, y] = tuple(map(lambda v: int(v * 0.9), pixels[x, y]))
-
-    # Eye shape simulation
-    if eye_shape == "circle":
-        draw = ImageDraw.Draw(qr_img)
-        eye_radius = size // 12
-        offset = size // 25
-        for pos in [(offset, offset), (size - offset - eye_radius * 2, offset), (offset, size - offset - eye_radius * 2)]:
-            draw.ellipse([pos[0], pos[1], pos[0] + eye_radius * 2, pos[1] + eye_radius * 2], fill=qr_color)
 
     # Optional gradient overlay
     if gradient:
@@ -82,13 +73,16 @@ if st.button("🚀 Generate QR Code") and url:
 
     # Add text below QR
     if add_text:
-        font = ImageFont.load_default()
-        text_height = 30
-        new_img = Image.new("RGB", (qr_img.width, qr_img.height + text_height + 10), bg_color)
+        try:
+            font = ImageFont.truetype("arial.ttf", 36)
+        except:
+            font = ImageFont.load_default()
+        text_height = 60
+        new_img = Image.new("RGB", (qr_img.width, qr_img.height + text_height + 20), bg_color)
         new_img.paste(qr_img, (0, 0))
         draw = ImageDraw.Draw(new_img)
         text_width = draw.textlength(add_text, font=font)
-        draw.text(((qr_img.width - text_width) // 2, qr_img.height + 5), add_text, fill=qr_color, font=font)
+        draw.text(((qr_img.width - text_width) // 2, qr_img.height + 10), add_text, fill=qr_color, font=font)
         qr_img = new_img
 
     # Show image
@@ -104,6 +98,3 @@ if st.button("🚀 Generate QR Code") and url:
     )
 else:
     st.info("👆 Add a URL and drag in your logo to generate a branded, scannable QR code.")
-
-
-

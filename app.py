@@ -1,5 +1,5 @@
 import qrcode
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 import streamlit as st
 import io
 
@@ -26,29 +26,36 @@ if st.button("🚀 Generate QR Code") and url:
     qr.add_data(url)
     qr.make(fit=True)
 
-    qr_img = qr.make_image(fill_color=qr_color, back_color=bg_color).convert('RGB')
+    qr_img = qr.make_image(fill_color=qr_color, back_color=bg_color).convert("RGBA")
     qr_img = qr_img.resize((size, size), Image.LANCZOS)
 
-    # Add logo
+    # Add logo in center
     if logo_file:
-        logo = Image.open(logo_file)
-        logo_size = size // 3
+        logo = Image.open(logo_file).convert("RGBA")
+        logo_size = size // 4  # Smaller for scan safety
         logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
+
+        # Optional: Add circle mask for rounded logo effect
+        mask = Image.new("L", (logo_size, logo_size), 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, logo_size, logo_size), fill=255)
+        logo.putalpha(mask)
+
+        # Paste logo
         pos = ((qr_img.size[0] - logo_size) // 2, (qr_img.size[1] - logo_size) // 2)
-        qr_img.paste(logo, pos, mask=logo if logo.mode == "RGBA" else None)
+        qr_img.paste(logo, pos, logo)
 
-    # Display QR
-    st.image(qr_img, caption="🔍 Scan-Ready Stylized QR Code", use_column_width=True)
+    # Show QR
+    st.image(qr_img, caption="🔍 Scan-Ready Premium QR Code", use_column_width=True)
 
-    # Download option
+    # Download
     buf = io.BytesIO()
     qr_img.save(buf, format="PNG")
     st.download_button(
-        label="📅 Download Your QR Code",
+        label="📥 Download QR Code",
         data=buf.getvalue(),
-        file_name="fiverr_style_qr.png",
+        file_name="premium_qr.png",
         mime="image/png"
     )
-
 else:
-    st.info("👆 Add a URL and drag in your logo to generate a branded, scannable QR code.")
+    st.info("👆 Enter a URL and add a logo to generate your branded QR code.")

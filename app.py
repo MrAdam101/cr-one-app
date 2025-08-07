@@ -13,7 +13,6 @@ url = st.text_input("🔗 Enter the destination URL")
 logo_file = st.file_uploader("🖼️ Drag & Drop Your Logo (PNG preferred)", type=["png", "jpg", "jpeg"])
 qr_color = st.color_picker("🎨 QR Code Dot Color", value="#000000")
 bg_color = st.color_picker("🌈 Background Color", value="#FFFFFF")
-corner_color = st.color_picker("🔵 Corner Eye Color", value="#FF0000")
 size = st.slider("📐 Output Size (pixels)", min_value=600, max_value=1200, value=800, step=100)
 
 if st.button("🚀 Generate QR Code") and url:
@@ -30,19 +29,6 @@ if st.button("🚀 Generate QR Code") and url:
     qr_img = qr.make_image(fill_color=qr_color, back_color=bg_color).convert('RGB')
     qr_img = qr_img.resize((size, size), Image.LANCZOS)
 
-    draw = ImageDraw.Draw(qr_img)
-
-    # Draw stylized corners (eyes)
-    eye_radius = size // 12
-    eye_positions = [
-        (0, 0),
-        (0, size - eye_radius * 3),
-        (size - eye_radius * 3, 0)
-    ]
-    for pos in eye_positions:
-        x, y = pos
-        draw.ellipse([x, y, x + eye_radius * 3, y + eye_radius * 3], fill=corner_color)
-
     # Add logo
     if logo_file:
         logo = Image.open(logo_file)
@@ -58,7 +44,7 @@ if st.button("🚀 Generate QR Code") and url:
     buf = io.BytesIO()
     qr_img.save(buf, format="PNG")
     st.download_button(
-        label="💾 Download Your QR Code",
+        label="📅 Download Your QR Code",
         data=buf.getvalue(),
         file_name="fiverr_style_qr.png",
         mime="image/png"

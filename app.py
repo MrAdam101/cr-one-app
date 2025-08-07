@@ -1,22 +1,23 @@
 import qrcode
-from PIL import Image
+from PIL import Image, ImageDraw
 import streamlit as st
 import io
 
 st.set_page_config(page_title="CR One App | Premium QR Generator", layout="centered")
 st.title("✨ CR One App | Premium QR Code Generator")
 
-st.markdown("Generate premium-quality QR codes with center logos and high-resolution output – like Fiverr professionals.")
+st.markdown("Generate premium QR codes with a drag-and-drop logo and stylized visuals like professional Fiverr examples.")
 
 # Input fields
 url = st.text_input("🔗 Enter the destination URL")
-logo_file = st.file_uploader("🖼️ Upload Logo (PNG preferred)", type=["png", "jpg", "jpeg"])
-qr_color = st.color_picker("🎨 QR Code Color", value="#000000")
+logo_file = st.file_uploader("🖼️ Drag & Drop Your Logo (PNG preferred)", type=["png", "jpg", "jpeg"])
+qr_color = st.color_picker("🎨 QR Code Dot Color", value="#000000")
 bg_color = st.color_picker("🌈 Background Color", value="#FFFFFF")
-size = st.slider("📐 Output Size (pixels)", min_value=400, max_value=1200, value=800, step=100)
+corner_color = st.color_picker("🔵 Corner Eye Color", value="#FF0000")
+size = st.slider("📐 Output Size (pixels)", min_value=600, max_value=1200, value=800, step=100)
 
 if st.button("🚀 Generate QR Code") and url:
-    # Create QR code
+    # Create QR code with high error correction
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -29,26 +30,39 @@ if st.button("🚀 Generate QR Code") and url:
     qr_img = qr.make_image(fill_color=qr_color, back_color=bg_color).convert('RGB')
     qr_img = qr_img.resize((size, size), Image.LANCZOS)
 
+    draw = ImageDraw.Draw(qr_img)
+
+    # Draw stylized corners (eyes)
+    eye_radius = size // 12
+    eye_positions = [
+        (0, 0),
+        (0, size - eye_radius * 3),
+        (size - eye_radius * 3, 0)
+    ]
+    for pos in eye_positions:
+        x, y = pos
+        draw.ellipse([x, y, x + eye_radius * 3, y + eye_radius * 3], fill=corner_color)
+
     # Add logo
     if logo_file:
         logo = Image.open(logo_file)
-        logo_size = size // 4
+        logo_size = size // 3
         logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
         pos = ((qr_img.size[0] - logo_size) // 2, (qr_img.size[1] - logo_size) // 2)
         qr_img.paste(logo, pos, mask=logo if logo.mode == "RGBA" else None)
 
     # Display QR
-    st.image(qr_img, caption="🔍 Your Premium QR Code", use_column_width=True)
+    st.image(qr_img, caption="🔍 Scan-Ready Stylized QR Code", use_column_width=True)
 
-    # Download
+    # Download option
     buf = io.BytesIO()
     qr_img.save(buf, format="PNG")
     st.download_button(
-        label="💾 Download as PNG",
+        label="💾 Download Your QR Code",
         data=buf.getvalue(),
-        file_name="premium_qr.png",
+        file_name="fiverr_style_qr.png",
         mime="image/png"
     )
 
 else:
-    st.info("👆 Enter a URL and upload a logo to generate your premium QR code.")
+    st.info("👆 Add a URL and drag in your logo to generate a branded, scannable QR code.")
